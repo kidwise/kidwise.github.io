@@ -19,6 +19,8 @@ const projects = defineCollection({
     title: z.string(),
     subtitle: z.string().optional(),
     description: z.string(),
+    /** Optional cover image in public/, e.g. "/projects/west-lake-dreams.jpg" */
+    cover: z.string().optional(),
     url: z.string(),
     repo: z.string().optional(),
     year: z.number(),

@@ -1,0 +1,324 @@
+---
+/**
+ * Full-bleed generative ink-wash landscape (水墨山水), rendered live on the GPU.
+ *
+ * - Five mountain ranges with ink pooling at the ridges and bleeding into mist
+ * - Drifting valley fog, a distant pagoda, still water with rippled reflections
+ * - A small boat crossing the lake, very slowly
+ * - Palette follows the visitor's local time (dawn / day / dusk / moonlit) and
+ *   switches to a night scene in dark mode
+ * - Gentle pointer parallax; static frame when "reduce motion" is on
+ * - Falls back to the SVG illustration if WebGL is unavailable
+ */
+import InkHills from "./InkHills.astro";
+---
+<section class="hero-ink" aria-label="A living ink-wash landscape">
+  <div class="fallback" aria-hidden="true"><InkHills /></div>
+  <canvas role="img" aria-label="Ink-wash mountains rising from mist above a still lake, with a pagoda and a small boat"></canvas>
+  <a class="cue" href="#after-hero" aria-label="Scroll to content"><span></span></a>
+</section>
+<div id="after-hero"></div>
+
+<style>
+  .hero-ink {
+    position: relative;
+    height: calc(100svh - 4.25rem);
+    min-height: 420px;
+    max-height: 1100px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; transition: opacity 1.6s var(--ease);
+  }
+  .hero-ink.ready canvas { opacity: 1; }
+  .fallback { position: absolute; inset: auto 0 8% 0; transition: opacity 1.2s var(--ease); }
+  .hero-ink.ready .fallback { opacity: 0; }
+  .cue {
+    position: absolute; left: 50%; bottom: 1.75rem; transform: translateX(-50%);
+    width: 2.5rem; height: 3.25rem; display: grid; place-items: center;
+  }
+  .cue span {
+    width: 1px; height: 2.5rem; background: linear-gradient(var(--muted), transparent);
+    transform-origin: top; animation: cue 2.8s var(--ease) infinite;
+  }
+  @keyframes cue {
+    0% { transform: scaleY(0); opacity: 0; }
+    35% { transform: scaleY(1); opacity: .9; }
+    100% { transform: scaleY(1) translateY(1.2rem); opacity: 0; }
+  }
+  @media (max-width: 560px) { .hero-ink { height: 72svh; min-height: 360px; } }
+</style>
+
+<script>
+  const VERT = `attribute vec2 a; void main(){ gl_Position = vec4(a, 0., 1.); }`;
+
+  const FRAG = `
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+  #else
+  precision mediump float;
+  #endif
+  uniform vec2 uRes;
+  uniform float uTime;
+  uniform vec2 uPtr;
+  uniform vec3 uSkyTop, uSkyLow, uInk, uMist, uSun, uWater, uPaper;
+  uniform vec2 uSunPos;
+  uniform float uSunR, uGlow;
+
+  const float H = 0.30;
+
+  float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+  float n1(float x){ float i = floor(x), f = fract(x); float u = f*f*(3.-2.*f); return mix(hash(vec2(i, 1.7)), hash(vec2(i + 1., 1.7)), u); }
+  float n2(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.-2.*f);
+    return mix(mix(hash(i), hash(i + vec2(1,0)), u.x), mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x), u.y); }
+  float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 5; i++){ v += a * n2(p); p = p * 2.03 + vec2(1.7, 9.2); a *= .5; } return v; }
+  float ridged(float x){ float v = 0., a = .62; for (int i = 0; i < 5; i++){ float n = 1. - abs(n1(x) * 2. - 1.); v += a * mix(n, n * n, float(i) * .2); x = x * 1.93 + 3.1; a *= .40; } return v; }
+
+  float layerH(float d, float x, float aspect){
+    float freq = mix(0.85, 2.6, d);
+    float off  = uPtr.x * mix(0.006, 0.05, d);
+    float h = H + mix(0.20, 0.0, d) + mix(0.30, 0.13, d) * ridged((x + off) * freq + d * 17.31 + 4.0);
+    // the two nearest ranges open in the middle so the lake shows through
+    float c = aspect * 0.5;
+    float e = smoothstep(0.10, 0.95, abs(x - c * mix(1.0, 0.92, d)) / c);
+    float open = smoothstep(0.55, 1.0, d);
+    return mix(h, H + (h - H) * e - 0.012 * (1. - e), open);
+  }
+
+  float box(vec2 p, vec2 b){ vec2 d = abs(p) - b; return length(max(d, 0.)) + min(max(d.x, d.y), 0.); }
+  float pagoda(vec2 q){
+    float d = 1e3;
+    for (int k = 0; k < 5; k++){
+      float fk = float(k);
+      float w = 0.42 - fk * 0.055;
+      float y = fk * 0.92;
+      d = min(d, box(q - vec2(0., y + 0.32), vec2(w, 0.32)));
+      float roof = box(q - vec2(0., y + 0.70), vec2(w + 0.26 - (q.y - y - 0.70) * 0.9, 0.07));
+      d = min(d, roof);
+    }
+    d = min(d, box(q - vec2(0., 5.0), vec2(0.035, 0.5)));
+    return d;
+  }
+
+  vec3 land(vec2 p, float aspect, float t){
+    vec3 col = mix(uSkyLow, uSkyTop, smoothstep(H, 1.05, p.y));
+
+    // sun / moon with a soft halo
+    float sd = length((p - uSunPos) * vec2(1., 1.));
+    col = mix(col, uSun, uGlow * exp(-sd * 5.5));
+    col = mix(col, uSun, smoothstep(uSunR, uSunR - 0.004, sd));
+
+    // high wisps
+    float w = fbm(vec2(p.x * 1.1 - t * 0.006, p.y * 7.0));
+    col = mix(col, uMist, smoothstep(0.55, 0.85, w) * 0.55 * smoothstep(H + 0.15, 0.9, p.y));
+
+    for (int i = 0; i < 5; i++){
+      float d = float(i) / 4.;
+      float h = layerH(d, p.x, aspect);
+      if (p.y < h){
+        float below = h - p.y;
+        float ink = exp(-below * mix(20., 6.5, d));                 // ink pools at the ridge
+        float tex = fbm(vec2(p.x * mix(12., 26., d), p.y * mix(16., 34., d)) + d * 3.);
+        ink *= mix(0.72, 1.12, tex);                                 // dry-brush texture
+        ink += smoothstep(0.004, 0.0, below) * 0.25 * d;             // crisp outline on near ranges
+        float strength = mix(0.18, 0.92, d * d);
+        col = mix(uMist, uInk, clamp(ink * strength, 0., 1.));
+      }
+      if (i == 2){
+        float px = aspect * 0.37 - uPtr.x * 0.03;
+        float base = layerH(d, px, aspect);
+        float s = 0.0125;
+        float pd = pagoda((p - vec2(px, base - s * 0.6)) / s);
+        col = mix(col, mix(uMist, uInk, 0.55), smoothstep(0.08, -0.08, pd));
+      }
+      // drifting fog that settles in each valley
+      float fog = fbm(vec2(p.x * 1.6 - t * (0.010 + d * 0.012) + d * 9., p.y * 5.5 - d * 3.));
+      float band = 1. - smoothstep(0.0, mix(0.10, 0.06, d), p.y - (H + mix(0.12, 0.0, d)));
+      col = mix(col, uMist, band * smoothstep(0.38, 0.78, fog) * 0.9);
+    }
+    // shoreline haze
+    col = mix(col, uMist, (1. - smoothstep(H, H + 0.05, p.y)) * 0.55);
+    return col;
+  }
+
+  void main(){
+    vec2 frag = gl_FragCoord.xy;
+    float aspect = uRes.x / uRes.y;
+    vec2 p = vec2(frag.x / uRes.y, frag.y / uRes.y);
+    float t = uTime;
+    vec3 col;
+
+    if (p.y >= H){
+      col = land(p, aspect, t);
+    } else {
+      float depth = H - p.y;
+      float rip = (n2(vec2(p.x * 3., depth * 120. - t * 0.5)) - .5) * 0.018 * (0.4 + depth * 5.);
+      vec2 rp = vec2(p.x + rip, H + depth * 1.15 + rip * 0.3);
+      vec3 refl = land(rp, aspect, t);
+      col = mix(refl, uWater, 0.55 + 0.4 * smoothstep(0., H * 0.8, depth));
+      // sun path on the water
+      float path = exp(-abs(p.x - uSunPos.x) * 18.) * smoothstep(0.55, 0.9, n2(vec2(p.x * 30., depth * 220. - t * 0.8)));
+      col = mix(col, uSun, path * uGlow * 1.6);
+      // ink ripple strokes
+      float lines = smoothstep(0.80, 0.95, n2(vec2(p.x * 2.2 + t * 0.01, depth * 140.)));
+      col = mix(col, uInk, lines * 0.07 * (1. - depth * 2.));
+
+      // a small boat crossing the lake
+      float bx = mod(t * 0.0045, aspect + 0.4) - 0.2;
+      vec2 q = p - vec2(bx, H - 0.075);
+      float bob = sin(t * 0.8) * 0.0012;
+      q.y -= bob;
+      float hull = length(vec2(q.x / 0.032, (q.y + 0.004) / 0.008)) - 1.;
+      hull = max(hull, q.y);                                      // keep the lower half
+      float awning = length(vec2((q.x + 0.004) / 0.011, (q.y - 0.002) / 0.008)) - 1.;
+      awning = max(awning, -q.y);
+      float pole = box(q - vec2(0.022, 0.012), vec2(0.0007, 0.016));
+      float boat = min(min(hull, awning), pole / 0.01);
+      col = mix(col, uInk, smoothstep(0.08, -0.08, boat) * 0.8);
+      // its faint reflection
+      vec2 qr = vec2(q.x, -q.y - 0.008);
+      float rboat = max(length(vec2(qr.x / 0.032, qr.y / 0.010)) - 1., -qr.y);
+      col = mix(col, uInk, smoothstep(0.1, -0.1, rboat) * 0.12);
+    }
+
+    // paper grain + soft edges, fading into the page below
+    col += (hash(frag + 0.5) - 0.5) * 0.028;
+    float vig = smoothstep(0.35, 1.1, length((frag / uRes - 0.5) * vec2(1.2, 1.0)));
+    col = mix(col, uPaper, vig * 0.22);
+    col = mix(col, uPaper, smoothstep(0.10, 0.0, frag.y / uRes.y));
+    gl_FragColor = vec4(col, 1.);
+  }`;
+
+  type Palette = {
+    skyTop: string; skyLow: string; ink: string; mist: string; sun: string; water: string;
+    sunPos: [number, number]; sunR: number; glow: number;
+  };
+  const PALETTES: Record<string, Palette> = {
+    dawn:  { skyTop: "#eeeae4", skyLow: "#f3dccd", ink: "#33403f", mist: "#f0e8e0", sun: "#ecaa8c", water: "#e6dfd8", sunPos: [0.70, 0.40], sunR: 0.045, glow: 0.45 },
+    day:   { skyTop: "#e9ece8", skyLow: "#f5f3ec", ink: "#2f3b35", mist: "#f2f0ea", sun: "#efd2bc", water: "#e1e5df", sunPos: [0.66, 0.74], sunR: 0.050, glow: 0.30 },
+    dusk:  { skyTop: "#e6e0e0", skyLow: "#f0c9b3", ink: "#34303a", mist: "#efe2d8", sun: "#e0896a", water: "#e4d6cd", sunPos: [0.30, 0.43], sunR: 0.055, glow: 0.55 },
+    moon:  { skyTop: "#e3e6e6", skyLow: "#eef0ee", ink: "#2c3536", mist: "#eff1ef", sun: "#d7dcda", water: "#e0e5e3", sunPos: [0.72, 0.76], sunR: 0.038, glow: 0.25 },
+    night: { skyTop: "#0c1012", skyLow: "#1f282a", ink: "#030405", mist: "#2e393b", sun: "#e8e2d2", water: "#121718", sunPos: [0.72, 0.76], sunR: 0.036, glow: 0.18 },
+  };
+
+  const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+
+  function pickPalette(): Palette {
+    const root = document.documentElement;
+    const dark = root.dataset.theme
+      ? root.dataset.theme === "dark"
+      : matchMedia("(prefers-color-scheme: dark)").matches;
+    if (dark) return PALETTES.night;
+    const forced = new URLSearchParams(location.search).get("sky"); // preview: ?sky=dawn|day|dusk|moon
+    if (forced && forced in PALETTES) return PALETTES[forced];
+    const h = new Date().getHours();
+    if (h >= 5 && h < 8) return PALETTES.dawn;
+    if (h >= 8 && h < 17) return PALETTES.day;
+    if (h >= 17 && h < 20) return PALETTES.dusk;
+    return PALETTES.moon;
+  }
+
+  function init() {
+    const section = document.querySelector<HTMLElement>(".hero-ink");
+    const canvas = section?.querySelector("canvas");
+    if (!section || !canvas) return;
+
+    const gl = canvas.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power" });
+    if (!gl) return; // SVG fallback stays visible
+
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(s)); return null; }
+      return s;
+    };
+    const vs = compile(gl.VERTEX_SHADER, VERT), fs = compile(gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) return;
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "a");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    const u = (n: string) => gl.getUniformLocation(prog, n);
+    const U = {
+      res: u("uRes"), time: u("uTime"), ptr: u("uPtr"),
+      skyTop: u("uSkyTop"), skyLow: u("uSkyLow"), ink: u("uInk"), mist: u("uMist"),
+      sun: u("uSun"), water: u("uWater"), paper: u("uPaper"),
+      sunPos: u("uSunPos"), sunR: u("uSunR"), glow: u("uGlow"),
+    };
+
+    let aspect = 1;
+    const applyPalette = () => {
+      const p = pickPalette();
+      gl.uniform3fv(U.skyTop, hex(p.skyTop)); gl.uniform3fv(U.skyLow, hex(p.skyLow));
+      gl.uniform3fv(U.ink, hex(p.ink)); gl.uniform3fv(U.mist, hex(p.mist));
+      gl.uniform3fv(U.sun, hex(p.sun)); gl.uniform3fv(U.water, hex(p.water));
+      const paper = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim() || "#f6f4ee";
+      gl.uniform3fv(U.paper, hex(paper));
+      gl.uniform2f(U.sunPos, p.sunPos[0] * aspect, p.sunPos[1]);
+      gl.uniform1f(U.sunR, p.sunR); gl.uniform1f(U.glow, p.glow);
+    };
+
+    const resize = () => {
+      const scale = Math.min(window.devicePixelRatio || 1, 1.5);
+      const w = Math.round(canvas.clientWidth * scale), h = Math.round(canvas.clientHeight * scale);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w; canvas.height = h;
+        gl.viewport(0, 0, w, h);
+      }
+      aspect = w / h;
+      gl.uniform2f(U.res, w, h);
+      applyPalette();
+    };
+
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+    const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+    const t0 = performance.now() - 120000; // start mid-drift, boat already on the lake
+    let visible = true, raf = 0, last = 0;
+
+    const draw = (now: number) => {
+      ptr.x += (ptr.tx - ptr.x) * 0.04; ptr.y += (ptr.ty - ptr.y) * 0.04;
+      gl.uniform2f(U.ptr, ptr.x, ptr.y);
+      gl.uniform1f(U.time, (now - t0) / 1000);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+    const loop = (now: number) => {
+      raf = 0;
+      if (!visible || document.hidden) return;
+      if (now - last > 1000 / 30) { last = now; draw(now); }
+      raf = requestAnimationFrame(loop);
+    };
+    const start = () => {
+      if (reduce.matches) { draw(performance.now()); return; }
+      if (!raf) raf = requestAnimationFrame(loop);
+    };
+
+    resize();
+    draw(performance.now());
+    section.classList.add("ready");
+    start();
+
+    new ResizeObserver(() => { resize(); draw(performance.now()); }).observe(canvas);
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) start(); }).observe(section);
+    document.addEventListener("visibilitychange", start);
+    reduce.addEventListener("change", start);
+    new MutationObserver(() => { applyPalette(); draw(performance.now()); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyPalette(); draw(performance.now()); });
+    window.addEventListener("pointermove", (e) => {
+      ptr.tx = (e.clientX / window.innerWidth) * 2 - 1;
+      ptr.ty = (e.clientY / window.innerHeight) * 2 - 1;
+    }, { passive: true });
+  }
+
+  init();
+</script>

@@ -24,6 +24,7 @@ draft: false        # true = only visible in `npm run dev`
 ```
 
 **Add a project:** add `src/content/projects/name.md` (see `west-lake-dreams.md` for the fields).
+For a cover image, put a screenshot in `public/projects/` and add `cover: "/projects/name.jpg"`.
 A project that is its own GitHub Pages repo can use a relative `url` like `/repo-name/`,
 which follows the custom domain automatically. Also add it to `reservedPaths` in `site.config.ts`.
 
@@ -35,6 +36,7 @@ Pushing to `main` deploys automatically.
 |---|---|
 | `site.config.ts` | Name, tagline, domain, social links. **Single source of truth.** |
 | `src/styles/global.css` | Design tokens (colors, fonts, spacing) at the top |
-| `src/components/InkHills.astro` | The ink-wash landscape illustration |
+| `src/components/HeroInk.astro` | The live ink-wash hero (WebGL). Preview palettes with `/?sky=dawn`, `day`, `dusk`, `moon` |
+| `src/components/InkHills.astro` | Static SVG landscape (project-card art and no-WebGL fallback) |
 | `src/pages/` | Home, Thoughts, Projects, About, RSS, 404 |
 | `DOMAIN.md` | How to change domains / DNS (GoDaddy) |

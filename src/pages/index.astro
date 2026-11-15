@@ -1,26 +1,17 @@
 ---
 import Base from "../layouts/Base.astro";
-import InkHills from "../components/InkHills.astro";
+import HeroInk from "../components/HeroInk.astro";
 import ThoughtRow from "../components/ThoughtRow.astro";
 import ProjectRow from "../components/ProjectRow.astro";
-import { SITE } from "../../site.config.ts";
 import { getThoughts, getProjects } from "../lib/content";
+import { SITE } from "../../site.config.ts";
 
 const thoughts = (await getThoughts()).slice(0, 3);
 const projects = (await getProjects()).filter((p) => p.data.featured).slice(0, 3);
 ---
 <Base>
-  <section class="hero">
-    <div class="frame">
-      <p class="eyebrow rise">Thoughts &amp; Projects</p>
-      <h1 class="rise rise-2">{SITE.tagline}</h1>
-      <p class="lede rise rise-3">
-        I'm {SITE.name}. This is a quiet corner where I write down what I'm thinking about
-        and share the things I make, slowly and with care.
-      </p>
-    </div>
-    <div class="landscape rise rise-3"><InkHills /></div>
-  </section>
+  <h1 class="sr-only">{SITE.name}</h1>
+  <HeroInk />
 
   <section class="frame section">
     <div class="section-head">
@@ -40,9 +31,5 @@ const projects = (await getProjects()).filter((p) => p.data.featured).slice(0, 3
 </Base>
 
 <style>
-  .hero { padding-top: clamp(3.5rem, 10vw, 7rem); }
-  h1 { font-size: clamp(2.6rem, 7vw, 5rem); line-height: 1.06; letter-spacing: -0.025em; max-width: 15ch; }
-  .lede { font-size: clamp(1.1rem, 2vw, 1.25rem); color: var(--muted); max-width: 34rem; margin-top: 1.75rem; }
-  .landscape { margin-top: clamp(2rem, 6vw, 4rem); max-width: 1600px; margin-inline: auto; }
   .plain { list-style: none; margin: 0; padding: 0; }
 </style>
