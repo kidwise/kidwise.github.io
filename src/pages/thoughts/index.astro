@@ -1,0 +1,35 @@
+---
+import Base from "../../layouts/Base.astro";
+import ThoughtRow from "../../components/ThoughtRow.astro";
+import { getThoughts, tagSlug } from "../../lib/content";
+
+const posts = await getThoughts();
+const byYear = Map.groupBy(posts, (p) => p.data.date.getUTCFullYear());
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+---
+<Base title="Thoughts" description="Essays and notes by kidwise.">
+  <section class="frame head">
+    <p class="eyebrow">Writing</p>
+    <h1 class="page-title">Thoughts</h1>
+    <p class="page-intro">Essays, notes, and half-finished ideas, written to think more clearly.</p>
+    {tags.length > 0 && (
+      <p class="tags">{tags.map((t) => <a class="tag" href={`/thoughts/tags/${tagSlug(t)}/`}>{t}</a>)}</p>
+    )}
+  </section>
+
+  {[...byYear].map(([year, list]) => (
+    <section class="frame year">
+      <h2>{year}</h2>
+      <ul>{list.map((post) => <ThoughtRow post={post} showYear={false} />)}</ul>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .head { padding-top: clamp(3rem, 8vw, 5.5rem); }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1.75rem; }
+  .year { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; margin-top: clamp(2.5rem, 6vw, 4rem); }
+  .year h2 { font-size: 1.1rem; color: var(--muted); padding-top: 1.55rem; font-variant-numeric: tabular-nums; }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  @media (max-width: 640px) { .year { grid-template-columns: 1fr; gap: 0; } .year h2 { padding-top: 0; margin-bottom: 0.5rem; } }
+</style>

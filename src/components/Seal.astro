@@ -1,0 +1,10 @@
+---
+/** Small seal-stamp mark, like a painter's chop. */
+interface Props { size?: number }
+const { size = 22 } = Astro.props;
+---
+<svg class="seal" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+  <rect x="1.5" y="1.5" width="21" height="21" rx="3.5" fill="var(--clay)" />
+  <rect x="3.6" y="3.6" width="16.8" height="16.8" rx="2" fill="none" stroke="var(--paper)" stroke-width="0.9" opacity="0.85" />
+  <text x="12" y="16.6" text-anchor="middle" font-family="var(--font-serif)" font-size="13" fill="var(--paper)" font-style="italic">k</text>
+</svg>

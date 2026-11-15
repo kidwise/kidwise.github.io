@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE } from "../../site.config.ts";
+---
+<Base title="About" description={`About ${SITE.name}.`}>
+  <section class="frame head">
+    <p class="eyebrow">About</p>
+    <h1 class="page-title">Hello, I'm {SITE.name}.</h1>
+  </section>
+  <section class="frame">
+    <div class="measure prose">
+      <p>
+        This site is where I share my passions and the thoughts that come with them.
+        I like making things that feel calm and considered, and writing helps me
+        understand what I actually think.
+      </p>
+      <p>
+        You'll find longer pieces under <a href="/thoughts/">Thoughts</a> and the things
+        I've built under <a href="/projects/">Projects</a>.
+      </p>
+      <h2>Elsewhere</h2>
+      <ul>
+        {SITE.social.map((s) => <li><a href={s.href} rel="me noopener">{s.label}</a></li>)}
+        <li><a href="/rss.xml">RSS feed</a></li>
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .head { padding-top: clamp(3rem, 8vw, 5.5rem); padding-bottom: 2.5rem; }
+</style>

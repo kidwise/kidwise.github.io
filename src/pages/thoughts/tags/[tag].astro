@@ -1,0 +1,30 @@
+---
+import Base from "../../../layouts/Base.astro";
+import ThoughtRow from "../../../components/ThoughtRow.astro";
+import { getThoughts, tagSlug, type Thought } from "../../../lib/content";
+
+export async function getStaticPaths() {
+  const posts = await getThoughts();
+  const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
+  return tags.map((tag) => ({
+    params: { tag: tagSlug(tag) },
+    props: { tag, posts: posts.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+interface Props { tag: string; posts: Thought[] }
+const { tag, posts } = Astro.props;
+---
+<Base title={`Thoughts on ${tag}`}>
+  <section class="frame head">
+    <a class="quiet-link" href="/thoughts/">← All thoughts</a>
+    <h1 class="page-title">{tag}</h1>
+    <p class="page-intro">{posts.length} {posts.length === 1 ? "note" : "notes"}</p>
+  </section>
+  <section class="frame"><ul>{posts.map((post) => <ThoughtRow post={post} />)}</ul></section>
+</Base>
+
+<style>
+  .head { padding-top: clamp(3rem, 8vw, 5.5rem); padding-bottom: 2rem; }
+  .head h1 { margin-top: 1.5rem; }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+</style>

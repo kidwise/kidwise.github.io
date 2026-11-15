@@ -1,0 +1,54 @@
+---
+import { render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { getThoughts, readingTime, formatDate, tagSlug, type Thought } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const posts = await getThoughts();
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+interface Props { post: Thought; newer?: Thought; older?: Thought }
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+const { title, date, summary, tags } = post.data;
+---
+<Base title={title} description={summary} type="article" publishedTime={date}>
+  <article class="frame">
+    <header class="measure post-head">
+      <a class="quiet-link back" href="/thoughts/">← Thoughts</a>
+      <h1>{title}</h1>
+      <p class="meta">
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        <span aria-hidden="true">·</span>
+        <span>{readingTime(post.body)}</span>
+      </p>
+      {tags.length > 0 && <p class="tags">{tags.map((t) => <a class="tag" href={`/thoughts/tags/${tagSlug(t)}/`}>{t}</a>)}</p>}
+    </header>
+    <div class="measure prose"><Content /></div>
+
+    {(older || newer) && (
+      <nav class="measure pager" aria-label="More thoughts">
+        {older ? <a href={`/thoughts/${older.id}/`}><span>Older</span>{older.data.title}</a> : <span />}
+        {newer && <a class="next" href={`/thoughts/${newer.id}/`}><span>Newer</span>{newer.data.title}</a>}
+      </nav>
+    )}
+  </article>
+</Base>
+
+<style>
+  article { padding-top: clamp(2.5rem, 7vw, 5rem); }
+  .measure { margin-inline: auto; }
+  .back { display: inline-block; margin-bottom: 2.25rem; }
+  h1 { font-size: clamp(2.3rem, 5.5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.02em; }
+  .meta { display: flex; gap: 0.6rem; color: var(--muted); font-size: 0.9rem; margin: 1.25rem 0 0; }
+  .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 1rem 0 0; }
+  .post-head { padding-bottom: 2.5rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--line); }
+  .pager { display: flex; justify-content: space-between; gap: 2rem; margin-top: 4.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  .pager a { display: flex; flex-direction: column; gap: 0.2rem; text-decoration: none; font-family: var(--font-serif); font-size: 1.15rem; max-width: 48%; transition: color .3s var(--ease); }
+  .pager a:hover { color: var(--moss-strong); }
+  .pager span { font-family: var(--font-sans); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .next { text-align: right; margin-left: auto; }
+</style>

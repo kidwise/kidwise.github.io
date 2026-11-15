@@ -1,0 +1,51 @@
+---
+/** Ink-wash landscape: layered hills, a low sun, a distant pagoda, still water.
+ *  Colors come from CSS tokens so it follows light/dark themes. */
+interface Props { class?: string; compact?: boolean }
+const { class: cls = "", compact = false } = Astro.props;
+const id = compact ? "c" : "h";
+---
+<svg class={`ink-hills ${cls}`} viewBox="0 0 1200 380" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Ink-wash hills over a still lake">
+  <defs>
+    <linearGradient id={`mist-${id}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--paper)" stop-opacity="0" />
+      <stop offset="1" stop-color="var(--paper)" stop-opacity="0.92" />
+    </linearGradient>
+    <linearGradient id={`water-${id}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--hill-far)" stop-opacity="0.55" />
+      <stop offset="1" stop-color="var(--paper)" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="860" cy="118" r="46" fill="var(--sun)" opacity="0.75" />
+
+  <path fill="var(--hill-far)" d="M0 238 C 90 210 150 170 230 178 C 300 186 340 150 420 140 C 500 130 560 176 640 170 C 720 164 760 118 850 124 C 940 130 990 176 1070 168 C 1130 162 1170 150 1200 152 L1200 290 L0 290 Z" />
+  <rect x="0" y="170" width="1200" height="120" fill={`url(#mist-${id})`} />
+
+  <path fill="var(--hill-mid)" d="M0 262 C 70 250 120 214 200 216 C 270 218 300 246 370 240 C 440 234 470 196 540 192 C 610 188 650 232 720 236 C 790 240 830 214 900 210 C 980 206 1030 244 1110 240 C 1150 238 1180 232 1200 230 L1200 300 L0 300 Z" />
+
+  <!-- distant pagoda on the ridge -->
+  <g fill="var(--hill-near)" transform="translate(528 150)">
+    <rect x="9" y="0" width="2" height="8" />
+    <path d="M2 10 h16 l-3 -3 h-10 z" />
+    <rect x="5" y="10" width="10" height="7" />
+    <path d="M0 19 h20 l-3 -3 h-14 z" />
+    <rect x="4" y="19" width="12" height="8" />
+    <path d="M-2 29 h24 l-3 -3 h-18 z" />
+    <rect x="3" y="29" width="14" height="14" />
+  </g>
+  <rect x="0" y="200" width="1200" height="100" fill={`url(#mist-${id})`} />
+
+  <path fill="var(--hill-near)" opacity="0.85" d="M0 300 C 60 292 110 266 170 270 C 230 274 260 298 320 298 L 0 304 Z M760 304 C 830 300 880 270 950 268 C 1020 266 1060 290 1120 288 C 1160 287 1185 282 1200 280 L1200 304 Z" />
+
+  <rect x="0" y="302" width="1200" height="78" fill={`url(#water-${id})`} />
+  <g stroke="var(--hill-near)" stroke-linecap="round" opacity="0.45" stroke-width="1.2">
+    <path d="M140 322 h120" /><path d="M420 336 h70" /><path d="M690 326 h150" />
+    <path d="M980 344 h90" /><path d="M260 352 h50" /><path d="M820 360 h60" />
+  </g>
+  <ellipse cx="860" cy="332" rx="34" ry="3" fill="var(--sun)" opacity="0.5" />
+</svg>
+
+<style>
+  .ink-hills { width: 100%; height: auto; }
+</style>

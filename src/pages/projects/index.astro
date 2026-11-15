@@ -1,0 +1,19 @@
+---
+import Base from "../../layouts/Base.astro";
+import ProjectRow from "../../components/ProjectRow.astro";
+import { getProjects } from "../../lib/content";
+const projects = await getProjects();
+---
+<Base title="Projects" description="Things kidwise has made.">
+  <section class="frame head">
+    <p class="eyebrow">Making</p>
+    <h1 class="page-title">Projects</h1>
+    <p class="page-intro">Small things built with care: experiments, tools, and quiet places to wander.</p>
+  </section>
+  <section class="frame"><ul>{projects.map((project) => <ProjectRow project={project} />)}</ul></section>
+</Base>
+
+<style>
+  .head { padding-top: clamp(3rem, 8vw, 5.5rem); padding-bottom: 1.5rem; }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+</style>

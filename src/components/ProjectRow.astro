@@ -1,0 +1,53 @@
+---
+import type { Project } from "../lib/content";
+import InkHills from "./InkHills.astro";
+interface Props { project: Project }
+const { project } = Astro.props;
+const { title, subtitle, description, url, repo, year, status, tags } = project.data;
+const external = /^https?:\/\//.test(url);
+---
+<li class="project">
+  <a class="art" href={url} tabindex="-1" aria-hidden="true" {...(external ? { rel: "noopener" } : {})}>
+    <InkHills compact />
+  </a>
+  <div class="info">
+    <p class="meta"><span>{year}</span><span class={`status s-${status}`}>{status}</span></p>
+    <h3><a href={url} {...(external ? { rel: "noopener" } : {})}>{title}{subtitle && <span class="sub" lang="zh">{subtitle}</span>}</a></h3>
+    <p class="desc">{description}</p>
+    <div class="foot">
+      <span class="tags">{tags.map((t) => <span class="tag">{t}</span>)}</span>
+      <span class="links">
+        <a class="ink-link" href={url}>Visit</a>
+        {repo && <a class="ink-link" href={repo} rel="noopener">Source</a>}
+      </span>
+    </div>
+  </div>
+</li>
+
+<style>
+  .project {
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(1.25rem, 4vw, 3rem);
+    align-items: center; padding-block: 2rem; border-bottom: 1px solid var(--line);
+  }
+  .art {
+    display: block; border-radius: var(--radius); overflow: hidden;
+    background: var(--paper-raised); border: 1px solid var(--line);
+    aspect-ratio: 16 / 10;
+  }
+  .art :global(svg) { width: 100%; height: 100%; transition: transform 1.2s var(--ease); }
+  .project:hover .art :global(svg) { transform: scale(1.03); }
+  .meta { display: flex; gap: 0.75rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.6rem; }
+  .status::before { content: "●"; margin-right: 0.35rem; font-size: 0.6em; vertical-align: 0.2em; }
+  .s-active::before { color: var(--moss); }
+  .s-shipped::before { color: var(--clay); }
+  .s-archived::before { color: var(--muted); }
+  h3 { font-size: clamp(1.5rem, 3vw, 1.9rem); }
+  h3 a { text-decoration: none; transition: color .3s var(--ease); }
+  h3 a:hover { color: var(--moss-strong); }
+  .sub { display: block; font-size: 0.6em; color: var(--muted); margin-top: 0.35rem; letter-spacing: 0.08em; }
+  .desc { color: var(--ink-soft); margin: 0.9rem 0 1.1rem; }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; align-items: center; }
+  .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .links { display: flex; gap: 1.1rem; font-size: 0.9rem; }
+  @media (max-width: 720px) { .project { grid-template-columns: 1fr; } }
+</style>

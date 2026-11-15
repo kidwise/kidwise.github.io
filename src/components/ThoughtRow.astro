@@ -1,0 +1,35 @@
+---
+import { formatDate, type Thought } from "../lib/content";
+interface Props { post: Thought; showYear?: boolean }
+const { post, showYear = true } = Astro.props;
+const { title, date, summary } = post.data;
+---
+<li class="row">
+  <a href={`/thoughts/${post.id}/`}>
+    <time datetime={date.toISOString()}>{showYear ? formatDate(date) : formatDate(date, "short")}</time>
+    <span class="body">
+      <span class="title">{title}</span>
+      {summary && <span class="summary">{summary}</span>}
+    </span>
+    <span class="arrow" aria-hidden="true">→</span>
+  </a>
+</li>
+
+<style>
+  .row { border-bottom: 1px solid var(--line); }
+  a {
+    display: grid; grid-template-columns: 10rem 1fr auto; gap: 0.25rem 2rem; align-items: baseline;
+    padding: 1.4rem 0; text-decoration: none; color: inherit;
+  }
+  time { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .body { display: flex; flex-direction: column; gap: 0.3rem; }
+  .title { font-family: var(--font-serif); font-size: 1.35rem; line-height: 1.3; transition: color .3s var(--ease); }
+  .summary { color: var(--muted); font-size: 0.95rem; }
+  .arrow { color: var(--muted); opacity: 0; transform: translateX(-6px); transition: opacity .3s var(--ease), transform .3s var(--ease); }
+  a:hover .title { color: var(--moss-strong); }
+  a:hover .arrow { opacity: 1; transform: none; }
+  @media (max-width: 640px) {
+    a { grid-template-columns: 1fr; }
+    .arrow { display: none; }
+  }
+</style>
