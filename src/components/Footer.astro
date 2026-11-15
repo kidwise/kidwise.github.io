@@ -7,7 +7,7 @@ const year = new Date().getFullYear();
     <p class="colophon">© {year} {SITE.name} · Made slowly, with care.</p>
     <ul>
       {SITE.social.map((s) => <li><a class="quiet-link" href={s.href} rel="me noopener">{s.label}</a></li>)}
-      <li><a class="quiet-link" href="/rss.xml">RSS</a></li>
+      <li><a class="quiet-link" href="/rss/">RSS</a></li>
     </ul>
   </div>
 </footer>

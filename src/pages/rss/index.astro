@@ -1,0 +1,71 @@
+---
+import Base from "../../layouts/Base.astro";
+import ThoughtRow from "../../components/ThoughtRow.astro";
+import { SITE_URL } from "../../../site.config.ts";
+import { getThoughts } from "../../lib/content";
+
+const feedUrl = `${SITE_URL}/rss.xml`;
+const recent = (await getThoughts()).slice(0, 5);
+---
+<Base title="Follow by RSS" description="Follow new thoughts from kidwise in any feed reader.">
+  <section class="frame head">
+    <p class="eyebrow">Follow</p>
+    <h1 class="page-title">Follow by RSS</h1>
+    <p class="page-intro">
+      RSS lets you follow this site without an account or a mailing list.
+      Paste the address below into any feed reader, and new thoughts will show up there when they're published.
+    </p>
+
+    <div class="feed">
+      <code id="feed-url">{feedUrl}</code>
+      <button type="button" id="copy" data-url={feedUrl}>Copy</button>
+    </div>
+    <p class="hint">
+      Don't have a reader? Try <a class="ink-link" href="https://netnewswire.com/" rel="noopener">NetNewsWire</a> (Mac, iPhone),{" "}<a class="ink-link" href="https://feedly.com/" rel="noopener">Feedly</a>{" "}or{" "}<a class="ink-link" href="https://www.inoreader.com/" rel="noopener">Inoreader</a> (web, any device).
+    </p>
+  </section>
+
+  {recent.length > 0 && (
+    <section class="frame section">
+      <div class="section-head"><h2>What's in the feed</h2></div>
+      <ul>{recent.map((post) => <ThoughtRow post={post} />)}</ul>
+    </section>
+  )}
+</Base>
+
+<script>
+  const btn = document.getElementById("copy") as HTMLButtonElement | null;
+  btn?.addEventListener("click", async () => {
+    const url = btn.dataset.url ?? "";
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const r = document.createRange();
+      r.selectNodeContents(document.getElementById("feed-url")!);
+      const s = getSelection(); s?.removeAllRanges(); s?.addRange(r);
+      document.execCommand("copy");
+    }
+    btn.textContent = "Copied";
+    setTimeout(() => (btn.textContent = "Copy"), 1800);
+  });
+</script>
+
+<style>
+  .head { padding-top: clamp(3rem, 8vw, 5.5rem); }
+  .feed {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    margin-top: 2.25rem; max-width: 34rem;
+    padding: 0.6rem 0.6rem 0.6rem 1rem;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-raised);
+  }
+  code { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink); flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  button {
+    font: inherit; font-size: 0.85rem; cursor: pointer;
+    padding: 0.4rem 0.95rem; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink);
+    transition: border-color .3s var(--ease), color .3s var(--ease);
+  }
+  button:hover { border-color: var(--moss); color: var(--moss-strong); }
+  .hint { color: var(--muted); font-size: 0.9rem; margin-top: 1rem; max-width: 34rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+</style>
