@@ -10,5 +10,6 @@ tags: ["game", "3D", "real map"]
 featured: true
 order: 1
 cover: "/projects/los-gatos.jpg"
+coverDark: "/projects/los-gatos-dusk.jpg"   # the game's own dusk, at Vasona Dam
 art: "los-gatos"   # fallback if the cover is removed
 ---

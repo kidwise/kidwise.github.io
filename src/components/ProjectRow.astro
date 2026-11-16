@@ -4,12 +4,17 @@ import InkHills from "./InkHills.astro";
 import LosGatos from "./art/LosGatos.astro";
 interface Props { project: Project }
 const { project } = Astro.props;
-const { title, subtitle, description, url, repo, year, status, tags, cover, art } = project.data;
+const { title, subtitle, description, url, repo, year, status, tags, cover, coverDark, art } = project.data;
 const external = /^https?:\/\//.test(url);
 ---
 <li class="project">
   <a class="art" href={url} tabindex="-1" aria-hidden="true" {...(external ? { rel: "noopener" } : {})}>
-    {cover ? <img src={cover} alt="" loading="lazy" decoding="async" />
+    {cover ? (
+        <>
+          <img class:list={["cover", { "has-dark": coverDark }]} src={cover} alt="" loading="lazy" decoding="async" />
+          {coverDark && <img class="cover cover-dark" src={coverDark} alt="" loading="lazy" decoding="async" />}
+        </>
+      )
       : art === "los-gatos" ? <LosGatos />
       : <InkHills compact />}
   </a>
@@ -38,6 +43,15 @@ const external = /^https?:\/\//.test(url);
     aspect-ratio: 16 / 10;
   }
   .art img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+  .cover-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .has-dark { display: none; }
+    :global(:root:not([data-theme="light"])) .cover-dark { display: block; }
+    :global(:root:not([data-theme="light"])) .cover { filter: brightness(0.9) saturate(0.95); }
+  }
+  :global(:root[data-theme="dark"]) .has-dark { display: none; }
+  :global(:root[data-theme="dark"]) .cover-dark { display: block; }
+  :global(:root[data-theme="dark"]) .cover { filter: brightness(0.9) saturate(0.95); }
   .project:hover .art img { transform: scale(1.03); }
   .art :global(svg) { width: 100%; height: 100%; transition: transform 1.2s var(--ease); }
   .project:hover .art :global(svg) { transform: scale(1.03); }
