@@ -21,7 +21,7 @@ export const SITE = {
 
   /** Paths served by *other* GitHub Pages repos under this domain.
    *  The build fails if this site ever generates a page at one of them. */
-  reservedPaths: ["west-lake-dreams"],
+  reservedPaths: ["west-lake-dreams", "los-gatos"],
 
   social: [
     { label: "GitHub", href: "https://github.com/kidwise" },

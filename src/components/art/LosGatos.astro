@@ -1,0 +1,84 @@
+---
+/**
+ * Card art for "Los Gatos: A Wandering".
+ * Gouache-and-print look borrowed from the game's own palette
+ * (src/style/palette.ts in kidwise/los-gatos): flat tones, wobbling brush
+ * edges, paper grain. A cat sits on the Creek Trail looking across
+ * Vasona Lake to the Santa Cruz Mountains; an orange ring waits on the path.
+ */
+const uid = "lg" + Math.random().toString(36).slice(2, 7);
+---
+<svg class="lg-art" viewBox="0 0 1200 750" preserveAspectRatio="xMidYMid slice" role="img"
+  aria-label="Painted scene: a cat on a trail looking across Vasona Lake to the Santa Cruz Mountains">
+  <defs>
+    <linearGradient id={`${uid}-sky`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d2e0e2" />
+      <stop offset="0.55" stop-color="#f5dfab" />
+      <stop offset="1" stop-color="#f2ccbc" />
+    </linearGradient>
+    <!-- wobbling brush edges -->
+    <filter id={`${uid}-brush`} x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="7" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="9" />
+    </filter>
+    <!-- paper grain -->
+    <filter id={`${uid}-grain`}>
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3" />
+      <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0.09 0" />
+    </filter>
+  </defs>
+
+  <rect width="1200" height="750" fill={`url(#${uid}-sky)`} />
+  <circle cx="905" cy="190" r="62" fill="#fff3cf" opacity="0.9" />
+
+  <g filter={`url(#${uid}-brush)`}>
+    <!-- Santa Cruz Mountains, far and near -->
+    <path fill="#acbac7" d="M-20 395 C 90 330 170 300 260 318 C 350 336 400 262 500 250 C 600 238 650 300 740 292 C 840 283 890 220 990 228 C 1080 236 1140 290 1220 300 L1220 470 L-20 470 Z" />
+    <path fill="#4f8272" opacity="0.92" d="M-20 450 C 70 410 150 384 240 398 C 330 412 380 360 470 356 C 560 352 620 404 720 398 C 820 392 870 346 960 350 C 1050 354 1110 396 1220 400 L1220 500 L-20 500 Z" />
+    <!-- tree line along the shore -->
+    <path fill="#3f6c62" d="M-20 478 q 30 -26 60 -6 q 22 -30 54 -8 q 26 -22 52 0 q 30 -28 62 -4 q 24 -20 50 2 q 28 -26 58 -2 L 300 500 L -20 500 Z" />
+    <path fill="#3f6c62" d="M820 482 q 28 -24 56 -4 q 26 -30 58 -6 q 30 -24 60 0 q 24 -26 54 -2 q 30 -22 60 2 q 28 -20 112 0 L 1220 500 L 820 500 Z" />
+
+    <!-- Vasona Lake -->
+    <path fill="#7fb7b5" d="M-20 492 L1220 492 L1220 600 C 1000 585 820 610 600 600 C 380 590 180 612 -20 598 Z" />
+    <g stroke="#f7f0e3" stroke-width="5" stroke-linecap="round" opacity="0.7">
+      <path d="M120 528 h90" /><path d="M420 548 h60" /><path d="M700 520 h120" /><path d="M960 556 h70" /><path d="M300 570 h40" />
+    </g>
+    <!-- a rowing boat -->
+    <path fill="#c9704f" d="M760 540 q 34 14 72 0 l -8 12 q -28 8 -56 0 z" />
+    <path stroke="#2b2a30" stroke-width="3" d="M770 541 l -16 -10 M822 541 l 16 -10" />
+
+    <!-- meadow and the trail -->
+    <path fill="#a2ba7c" d="M-20 590 C 200 570 380 600 560 596 C 760 592 960 566 1220 584 L1220 770 L-20 770 Z" />
+    <path fill="#86a86c" d="M-20 660 C 180 640 300 690 480 690 C 640 690 760 650 900 668 C 1040 686 1120 670 1220 660 L1220 770 L-20 770 Z" />
+    <path fill="#dcc0a2" d="M300 770 C 420 700 520 650 600 628 C 680 606 760 600 860 598 L 870 612 C 780 616 712 626 650 648 C 560 680 520 720 470 770 Z" />
+
+    <!-- an oak by the trail -->
+    <rect x="186" y="470" width="16" height="140" fill="#8a6f5c" />
+    <path fill="#5a8552" d="M100 500 C 90 440 150 410 196 420 C 236 380 312 400 318 450 C 362 470 346 532 296 530 C 262 556 192 552 168 530 C 118 540 86 526 100 500 Z" />
+    <path fill="#8db36a" d="M150 470 C 160 440 210 432 236 448 C 262 436 300 452 292 480 C 262 470 230 486 200 478 C 180 486 156 484 150 470 Z" />
+  </g>
+
+  <!-- the orange ring on the path -->
+  <ellipse cx="760" cy="606" rx="20" ry="7" fill="none" stroke="#e0683f" stroke-width="5" />
+
+  <!-- the cat, sitting, looking at the mountains -->
+  <g transform="translate(600 622)" fill="#4b4556">
+    <path d="M 26 -6 C 48 -4 58 -24 50 -40" fill="none" stroke="#4b4556" stroke-width="8" stroke-linecap="round" />
+    <ellipse cx="0" cy="-28" rx="27" ry="34" />
+    <circle cx="0" cy="-70" r="18" />
+    <path d="M -15 -80 L -12 -100 L 0 -86 Z" />
+    <path d="M 15 -80 L 12 -100 L 0 -86 Z" />
+    <path d="M -8 -2 h 16" stroke="#f5f0e7" stroke-width="4" stroke-linecap="round" />
+  </g>
+
+  <rect width="1200" height="750" filter={`url(#${uid}-grain)`} />
+</svg>
+
+<style>
+  .lg-art { width: 100%; height: 100%; display: block; }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .lg-art { filter: brightness(0.8) saturate(0.9); }
+  }
+  :global(:root[data-theme="dark"]) .lg-art { filter: brightness(0.8) saturate(0.9); }
+</style>

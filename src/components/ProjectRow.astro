@@ -1,14 +1,17 @@
 ---
 import type { Project } from "../lib/content";
 import InkHills from "./InkHills.astro";
+import LosGatos from "./art/LosGatos.astro";
 interface Props { project: Project }
 const { project } = Astro.props;
-const { title, subtitle, description, url, repo, year, status, tags, cover } = project.data;
+const { title, subtitle, description, url, repo, year, status, tags, cover, art } = project.data;
 const external = /^https?:\/\//.test(url);
 ---
 <li class="project">
   <a class="art" href={url} tabindex="-1" aria-hidden="true" {...(external ? { rel: "noopener" } : {})}>
-    {cover ? <img src={cover} alt="" loading="lazy" decoding="async" /> : <InkHills compact />}
+    {cover ? <img src={cover} alt="" loading="lazy" decoding="async" />
+      : art === "los-gatos" ? <LosGatos />
+      : <InkHills compact />}
   </a>
   <div class="info">
     <p class="meta"><span>{year}</span><span class={`status s-${status}`}>{status}</span></p>

@@ -21,6 +21,8 @@ const projects = defineCollection({
     description: z.string(),
     /** Optional cover image in public/, e.g. "/projects/west-lake-dreams.jpg" */
     cover: z.string().optional(),
+    /** Built-in illustrated card art, used when there is no cover */
+    art: z.enum(["west-lake", "los-gatos"]).optional(),
     url: z.string(),
     repo: z.string().optional(),
     year: z.number(),

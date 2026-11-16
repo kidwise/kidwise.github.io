@@ -8,5 +8,6 @@ year: 2026
 status: "active"
 tags: ["game", "story", "中文 / EN"]
 featured: true
-order: 1
+order: 2
+art: "west-lake"
 ---
