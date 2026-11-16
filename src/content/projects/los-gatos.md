@@ -9,5 +9,6 @@ status: "active"
 tags: ["game", "3D", "real map"]
 featured: true
 order: 1
-art: "los-gatos"
+cover: "/projects/los-gatos.jpg"
+art: "los-gatos"   # fallback if the cover is removed
 ---
