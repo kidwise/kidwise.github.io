@@ -5,10 +5,12 @@ import LosGatos from "./art/LosGatos.astro";
 interface Props { project: Project }
 const { project } = Astro.props;
 const { title, subtitle, description, url, repo, year, status, tags, cover, coverDark, art } = project.data;
-const external = /^https?:\/\//.test(url);
+const href = (url ?? repo)!;
+const external = /^https?:\/\//.test(href);
+const subLang = subtitle && /[\u3400-\u9fff]/.test(subtitle) ? "zh" : undefined;
 ---
 <li class="project">
-  <a class="art" href={url} tabindex="-1" aria-hidden="true" {...(external ? { rel: "noopener" } : {})}>
+  <a class="art" href={href} tabindex="-1" aria-hidden="true" {...(external ? { rel: "noopener" } : {})}>
     {cover ? (
         <>
           <img class:list={["cover", { "has-dark": coverDark }]} src={cover} alt="" loading="lazy" decoding="async" />
@@ -20,12 +22,12 @@ const external = /^https?:\/\//.test(url);
   </a>
   <div class="info">
     <p class="meta"><span>{year}</span><span class={`status s-${status}`}>{status}</span></p>
-    <h3><a href={url} {...(external ? { rel: "noopener" } : {})}>{title}{subtitle && <span class="sub" lang="zh">{subtitle}</span>}</a></h3>
+    <h3><a href={href} {...(external ? { rel: "noopener" } : {})}>{title}{subtitle && <span class="sub" lang={subLang}>{subtitle}</span>}</a></h3>
     <p class="desc">{description}</p>
     <div class="foot">
       <span class="tags">{tags.map((t) => <span class="tag">{t}</span>)}</span>
       <span class="links">
-        <a class="ink-link" href={url}>Visit</a>
+        {url && <a class="ink-link" href={url}>Visit</a>}
         {repo && <a class="ink-link" href={repo} rel="noopener">Source</a>}
       </span>
     </div>

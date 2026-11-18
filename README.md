@@ -26,6 +26,7 @@ draft: false        # true = only visible in `npm run dev`
 **Add a project:** add `src/content/projects/name.md` (see `west-lake-dreams.md` for the fields).
 For a cover image, put a screenshot in `public/projects/` and add `cover: "/projects/name.jpg"`.
 Add `coverDark: "/projects/name-dark.jpg"` to show a different image in dark mode (e.g. a dusk or night view).
+Leave out `url` for something with nothing to visit (e.g. a local tool); the card then shows only **Source**.
 A project that is its own GitHub Pages repo can use a relative `url` like `/repo-name/`,
 which follows the custom domain automatically. Also add it to `reservedPaths` in `site.config.ts`.
 

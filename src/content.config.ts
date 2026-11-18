@@ -25,14 +25,15 @@ const projects = defineCollection({
     coverDark: z.string().optional(),
     /** Built-in illustrated card art, used when there is no cover */
     art: z.enum(["west-lake", "los-gatos"]).optional(),
-    url: z.string(),
+    /** Where to try it. Leave out for tools with nothing to visit; the card then links to `repo`. */
+    url: z.string().optional(),
     repo: z.string().optional(),
     year: z.number(),
     status: z.enum(["active", "shipped", "archived"]).default("active"),
     tags: z.array(z.string()).default([]),
     featured: z.boolean().default(false),
     order: z.number().default(100),
-  }),
+  }).refine((d) => d.url || d.repo, { message: "A project needs a url or a repo" }),
 });
 
 export const collections = { thoughts, projects };
